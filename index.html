@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BarTab Pro</title>
+  <style>
+  :root{
+    --bg:#0f172a; /* slate-900 */
+    --panel:#111827; /* gray-900 */
+    --muted:#1f2937; /* gray-800 */
+    --text:#e5e7eb; /* gray-200 */
+    --accent:#22c55e; /* green-500 */
+    --accent-600:#16a34a;
+    --warn:#ef4444; /* red-500 */
+    --card:#0b1220; /* deep panel */
+    --line:#334155; /* slate-700 */
+    --sale:#dcfce7; /* green-100 */
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    color:var(--text); background:linear-gradient(180deg, #020617, #0b1220 35%, #0f172a);
+  }
+  .container{max-width:1200px;margin:0 auto;padding:24px}
+  .hidden{display:none}
+  .card{background:linear-gradient(180deg, #0b1220, #0c1424); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .row{display:flex; gap:16px; align-items:stretch}
+  .col{flex:1}
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:12px; background:var(--muted); color:var(--text); border:1px solid var(--line); cursor:pointer; transition:.15s}
+  .btn:hover{transform:translateY(-1px)}
+  .btn.primary{background:var(--accent); color:#052e16; border-color:#14532d; font-weight:700}
+  .btn.primary:hover{background:var(--accent-600)}
+  .btn.warn{background:transparent; border-color:var(--warn); color:#fecaca}
+  .btn.small{padding:6px 10px; border-radius:8px; font-size:.9rem}
+  input, select{background:#0f172a; color:var(--text); border:1px solid var(--line); border-radius:10px; padding:10px}
+  input[type=number]{width:100px}
+  .grid{display:grid; gap:12px}
+  .grid.inv{grid-template-columns: 1.5fr 0.8fr 0.8fr 0.6fr 0.6fr 0.6fr}
+  .grid.catalog{grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));}
+  .pill{display:inline-block; padding:4px 10px; border-radius:999px; background:#0b1220; border:1px solid var(--line); font-size:.8rem}
+  .section-title{font-size:1.1rem; letter-spacing:.3px; opacity:.9; margin:4px 0 12px}
+  .divider{height:1px; background:linear-gradient(90deg, transparent, #1f2a44, transparent); margin:16px 0}
+  .tag{font-size:.74rem; opacity:.8}
+
+  /* Orders list styling (light green) */
+  .orders{background:var(--sale); color:#052e16; border:1px solid #bbf7d0; border-radius:16px; padding:12px}
+  .orders h3{margin:0 0 8px 0}
+  .order-card{background:white; color:#052e16; border-radius:12px; padding:10px; border:1px solid #bbf7d0}
+
+  .head{opacity:.7; font-weight:600}
+  .badge{padding:2px 8px; border-radius:999px; border:1px solid var(--line); font-size:.75rem; background:#0b1220}
+
+  .footer{display:flex; justify-content:space-between; align-items:center; gap:12px}
+  .muted{opacity:.8}
+  .scroll{max-height:360px; overflow:auto}
+
+  /* ===== Responsive Layout ===== */
+  @media (max-width: 1024px) {
+    .row {
+      flex-wrap: wrap;
+    }
+    .col {
+      flex: 1 1 100%;
+    }
+    input, select {
+      width: 100%;
+    }
+    .grid.inv {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    body {
+      font-size: 15px;
+    }
+    .row {
+      flex-direction: column;
+      gap: 12px;
+    }
+    .grid.catalog {
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+    .grid.inv {
+      grid-template-columns: 1fr;
+    }
+    .card {
+      padding: 12px;
+      border-radius: 12px;
+    }
+    .btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    header.row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  @media (max-width: 480px) {
+    h1 {
+      font-size: 1.4rem;
+    }
+    .section-title {
+      font-size: 1rem;
+    }
+    .grid.catalog {
+      grid-template-columns: 1fr;
+    }
+    .grid.inv {
+      grid-template-columns: 1fr;
+    }
+    .orders h3 {
+      font-size: 1rem;
+    }
+    .btn {
+      font-size: 0.8rem;
+      padding: 6px 10px;
+    }
+  }
+</style>
+
+</head>
+<body>
+  <div class="container">
+    <header class="row" style="align-items:center">
+      <div class="col">
+        <h1 style="margin:0; font-size:1.8rem">🍹 BarTab Pro</h1>
+        <div class="tag">Tabs • Orders • Inventory</div>
+      </div>
+      <div><button id="logoutBtn" class="btn small hidden">⬅ Back to Login</button></div>
+    </header>
+
+    <!-- LOGIN PANEL -->
+    <section id="loginPanel" class="card" style="margin-top:16px">
+      <div class="row">
+        <div class="col">
+          <h2 style="margin:0 0 12px 0">Sign in</h2>
+          <div class="grid" style="grid-template-columns:1fr 1fr; gap:16px">
+            <div class="card">
+              <div class="section-title">Admin Login</div>
+              <div class="grid" style="grid-template-columns:1fr; gap:10px">
+                <input id="adminPass" type="password" placeholder="Admin Password" />
+                <button id="adminLogin" class="btn primary">Login as Admin</button>
+              </div>
+              <div class="tag muted" style="margin-top:8px">Admins can add/edit items and manage stock.</div>
+            </div>
+            <div class="card">
+              <div class="section-title">Staff Login</div>
+              <div class="grid" style="grid-template-columns:1fr; gap:10px">
+                <input id="staffPass" type="password" placeholder="Staff Password" />
+                <button id="staffLogin" class="btn">Login as Staff</button>
+              </div>
+              <div class="tag muted" style="margin-top:8px">Staff can create carts, checkout, and manage tabs.</div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="tag">Tip: Change passwords in Settings ▸ Security once signed in (admin).</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- APP PANEL -->
+    <section id="appPanel" class="hidden" style="margin-top:16px">
+      <div class="row">
+        <!-- LEFT: Catalog + Cart + Completed Sales (moved to bottom) -->
+        <div class="col">
+          <div class="card">
+            <div class="row" style="justify-content:space-between; align-items:center">
+              <div class="section-title">Catalog</div>
+              <div class="grid" style="grid-template-columns:1fr 120px; gap:8px; width:420px; max-width:100%">
+                <input id="search" placeholder="Search items..." />
+                <select id="filterCat"><option value="">All</option></select>
+              </div>
+            </div>
+            <div id="catalog" class="grid catalog"></div>
+          </div>
+          
+
+          <div style="height:12px"></div>
+
+          <div class="card">
+            <div class="row" style="justify-content:space-between; align-items:center">
+              <div class="section-title">Cart</div>
+              <div class="tag" id="cartSummary"></div>
+            </div>
+            <div id="cart" class="grid" style="grid-template-columns:1fr 80px 80px 40px"></div>
+            <div class="footer" style="padding-top:12px">
+              <div class="tag">Taxes/discounts not included (demo).</div>
+              <div>
+                <button id="clearCart" class="btn warn small">Clear</button>
+                <button id="checkout" class="btn primary">Checkout ▸ Tabs</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <!-- COMPLETED SALES BELOW CART -->
+          <div class="orders card">
+            <div class="row" style="justify-content:space-between; align-items:center">
+              <h3 style="margin:0">✅ Completed Sales</h3>
+              <button id="toggleAllBtn" class="btn small">See All (24h)</button>
+            </div>
+            <div id="recentOrders" class="grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px"></div>
+            <div id="allOrders" class="hidden" style="margin-top:10px">
+              <div class="divider"></div>
+              <div class="tag" style="margin-bottom:8px">Sales in the last 24 hours</div>
+              <div id="allOrdersGrid" class="grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px; max-height:220px; overflow:auto"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Tabs + Inventory (admin only) -->
+        <div class="col">
+          <div class="card">
+            <div class="row" style="justify-content:space-between; align-items:center">
+              <div class="section-title">Tabs</div>
+              <div>
+                <input id="newTabName" placeholder="Create new tab (e.g., Table 4 / Jess)" />
+                <button id="createTab" class="btn small">Create</button>
+              </div>
+            </div>
+            <div id="tabs" class="grid" style="grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:12px"></div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <div id="inventoryPanel" class="card hidden">
+            <div class="row" style="justify-content:space-between; align-items:center">
+              <div class="section-title">Inventory (Admin)</div>
+              <div>
+                <button id="seedDemo" class="btn small">Seed Demo Items</button>
+                <button id="exportData" class="btn small">Export</button>
+                <button id="importData" class="btn small">Import</button>
+              </div>
+            </div>
+
+            <div class="grid head inv" style="padding:6px 8px">
+              <div>Name</div>
+              <div>Category</div>
+              <div>Price</div>
+              <div>Stock</div>
+              <div>Active</div>
+              <div></div>
+            </div>
+            <div id="inventory" class="grid inv scroll"></div>
+
+            <div class="divider"></div>
+            <div class="grid inv">
+              <input id="itemName" placeholder="Item name" />
+              <input id="itemCat" placeholder="Category" />
+              <input id="itemPrice" type="number" min="0" step="0.01" placeholder="Price" />
+              <input id="itemStock" type="number" min="0" step="1" placeholder="Qty" />
+              <select id="itemActive"><option value="true">Active</option><option value="false">Inactive</option></select>
+              <button id="addItem" class="btn small">Add</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div style="margin-top:16px; display:flex; justify-content:flex-end">
+        <button id="logoutBtnBottom" class="btn small">⬅ Back to Login</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    
+    // ===== Utilities =====
+    const LS_KEYS = {
+      INV:'bartab_inventory',
+      TABS:'bartab_tabs',
+      ORDERS:'bartab_completed_orders',
+      COUNTER:'bartab_order_counter',
+      SECURITY:'bartab_security',
+      SEEDVER:'bartab_stock_version'
+    };
+
+    const STOCK_VERSION = '2'; // bump this to force one-time reseed
+
+    const now = () => Date.now();
+    const fmt = (n) => Number(n).toFixed(2);
+    const pad4 = (n) => String(n).padStart(4, '0');
+    const DAY = 24*60*60*1000;
+
+    function read(key, fallback){
+      try { return JSON.parse(localStorage.getItem(key)) ?? fallback } catch { return fallback }
+    }
+    function write(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+    function nextOrderNo(){
+      let c = read(LS_KEYS.COUNTER, 0);
+      const num = pad4(c % 10000);
+      c = (c + 1) % 10000; // wrap to 0 after 9999
+      write(LS_KEYS.COUNTER, c);
+      return `#${num}`;
+    }
+
+    function pruneOldTabs(){
+      let tabs = read(LS_KEYS.TABS, []);
+      const fresh = tabs.filter(t => (now() - (t.lastActivity||t.created)) < DAY);
+      if (fresh.length !== tabs.length) write(LS_KEYS.TABS, fresh);
+      return fresh;
+    }
+
+    function touchTab(id){
+      const tabs = read(LS_KEYS.TABS, []);
+      const i = tabs.findIndex(t => t.id === id);
+      if(i>-1){ tabs[i].lastActivity = now(); write(LS_KEYS.TABS, tabs); }
+    }
+
+ function seedDemo(){
+  const S = 100000;
+
+  // Stock organized by category
+  const demoByCat = {
+    Beer: [
+      {name:'Lager Pint', price:4.5}, {name:'IPA Pint', price:5.2},
+      {name:'Stout Pint', price:5.8}, {name:'Pale Ale Pint', price:5.2},
+      {name:'Wheat Beer Pint', price:5.4}
+    ],
+    Cider: [
+      {name:'Apple Cider Pint', price:5.2}, {name:'Pear Cider Pint', price:5.2},
+      {name:'Dark Fruits Cider Pint', price:5.4}
+    ],
+    Wine: [
+      {name:'Red Wine (175ml)', price:6.0}, {name:'White Wine (175ml)', price:6.0},
+      {name:'Rosé Wine (175ml)', price:6.0}, {name:'Prosecco (125ml)', price:6.5}
+    ],
+    Spirits: [
+      {name:'Whisky (Single)', price:5.5}, {name:'Vodka (Single)', price:5.2},
+      {name:'Gin (Single)', price:5.2}, {name:'Rum (Single)', price:5.2},
+      {name:'Tequila (Single)', price:5.5}, {name:'Jägermeister (Single)', price:5.5}
+    ],
+    'Mixed Drinks': [
+      {name:'Gin & Tonic', price:7.5}, {name:'Vodka & Coke', price:7.0},
+      {name:'Rum & Coke', price:7.0}, {name:'Whisky & Ginger', price:7.2},
+      {name:'Vodka Lemonade', price:7.0}
+    ],
+    Cocktails: [
+      {name:'Mojito', price:8.5}, {name:'Margarita', price:8.5},
+      {name:'Tequila Sunrise', price:8.0}, {name:'Long Island Iced Tea', price:9.0},
+      {name:'Aperol Spritz', price:8.5}, {name:'Old Fashioned', price:9.5},
+      {name:'Espresso Martini', price:9.5}
+    ],
+    Soft: [
+      {name:'Cola (330ml)', price:2.5}, {name:'Diet Cola (330ml)', price:2.5},
+      {name:'Lemonade (330ml)', price:2.5}, {name:'Orange Juice', price:3.0},
+      {name:'Apple Juice', price:3.0}, {name:'Still Water (500ml)', price:2.0},
+      {name:'Sparkling Water (500ml)', price:2.5}, {name:'Tonic Water (200ml)', price:2.2},
+      {name:'Soda Water (200ml)', price:2.0}
+    ],
+    'Coffee/Tea': [
+      {name:'Americano', price:2.8}, {name:'Latte', price:3.2}, {name:'Cappuccino', price:3.2},
+      {name:'Mocha', price:3.5}, {name:'Tea', price:2.5}
+    ],
+    Energy: [
+      {name:'Energy Drink', price:3.5}
+    ],
+    Food: [
+      {name:'Protein Bar', price:2.5}, {name:'Cheese Sandwich', price:4.5},
+      {name:'Ham Sandwich', price:4.5}, {name:'Chips', price:2.5}
+    ]
+  };
+
+  // Flatten the hierarchical structure for compatibility with your current code
+  const demo = [];
+  Object.keys(demoByCat).forEach(cat => {
+    demoByCat[cat].forEach(item => demo.push({...item, cat, stock:S, active:true}));
+  });
+
+  write(LS_KEYS.INV, demo);
+  write(LS_KEYS.SEEDVER, STOCK_VERSION);
+  renderInventory();
+  renderCatalog();
+  populateFilters();
+}
+
+
+    function saveSecurityDefaults(){
+      const sec = read(LS_KEYS.SECURITY, null);
+      if(!sec){
+        write(LS_KEYS.SECURITY, {admin:'admin123', staff:'staff123'});
+      }
+    }
+
+    // ===== State =====
+    let session = {role:null};
+    let cart = []; // {name, price, qty, id}
+    let showingAll = false;
+
+    // ===== Rendering =====
+    function renderAll(){
+      renderCatalog();
+      renderCart();
+      renderTabs();
+      renderInventory();
+      renderCompleted();
+      populateFilters();
+    }
+
+    // Completed Orders (recent 2 + toggle all within 24h)
+    function renderCompleted(){
+      const all = read(LS_KEYS.ORDERS, []).filter(o => now() - o.ts < DAY);
+      const recent2 = all.slice(-2);
+      const recentWrap = document.getElementById('recentOrders');
+      const allWrap = document.getElementById('allOrders');
+      const allGrid = document.getElementById('allOrdersGrid');
+      const toggleBtn = document.getElementById('toggleAllBtn');
+
+      recentWrap.innerHTML = '';
+      allGrid.innerHTML = '';
+
+      const renderCard = (o) => {
+        const card = document.createElement('div');
+        card.className = 'order-card';
+        card.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center">
+          <strong>${o.orderNo}</strong>
+          <span class="badge">${new Date(o.ts).toLocaleTimeString()}</span>
+        </div>
+        <div class="muted" style="margin:6px 0">Tab: <strong>${o.tabName}</strong></div>
+        <div>${o.items.map(i=>`${i.qty}× ${i.name}`).join(', ')}</div>
+        <div class="muted" style="margin-top:6px">Total £${fmt(o.total ?? o.items.reduce((s,i)=>s+i.qty*i.price,0))}</div>`;
+        return card;
+      };
+
+      (recent2.length? recent2:[]).slice().reverse().forEach(o=>{
+        recentWrap.appendChild(renderCard(o));
+      });
+      if(recent2.length===0){
+        const d=document.createElement('div'); d.className='order-card'; d.textContent='No recent sales.'; recentWrap.appendChild(d);
+      }
+
+      all.slice().reverse().forEach(o=> allGrid.appendChild(renderCard(o)) );
+
+      allWrap.classList.toggle('hidden', !showingAll);
+      toggleBtn.textContent = showingAll ? 'Hide' : 'See All (24h)';
+    }
+
+    // Inventory (Admin)
+    function renderInventory(){
+      const panel = document.getElementById('inventoryPanel');
+      panel.classList.toggle('hidden', session.role !== 'admin');
+      if(session.role !== 'admin') return;
+      const inv = read(LS_KEYS.INV, []);
+      const root = document.getElementById('inventory');
+      root.innerHTML = '';
+      inv.forEach((it, idx)=>{
+        const row = document.createElement('div');
+        row.className = 'grid inv card';
+        row.innerHTML = `
+          <input value="${it.name}" data-idx="${idx}" data-field="name" />
+          <input value="${it.cat}" data-idx="${idx}" data-field="cat" />
+          <input type="number" min="0" step="0.01" value="${it.price}" data-idx="${idx}" data-field="price" />
+          <input type="number" min="0" step="1" value="${it.stock}" data-idx="${idx}" data-field="stock" />
+          <select data-idx="${idx}" data-field="active">
+            <option value="true" ${it.active? 'selected':''}>Active</option>
+            <option value="false" ${!it.active? 'selected':''}>Inactive</option>
+          </select>
+          <div style="display:flex; gap:8px; justify-content:flex-end">
+            <button class="btn small" data-action="save" data-idx="${idx}">Save</button>
+            <button class="btn small warn" data-action="del" data-idx="${idx}">Delete</button>
+          </div>`;
+        root.appendChild(row);
+      });
+
+      root.querySelectorAll('button').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          const idx = Number(e.currentTarget.dataset.idx);
+          const inv = read(LS_KEYS.INV, []);
+          if(e.currentTarget.dataset.action==='del'){
+            inv.splice(idx,1); write(LS_KEYS.INV, inv); renderAll(); return;
+          }
+          const parent = e.currentTarget.parentElement.parentElement; // row
+          const fields = parent.querySelectorAll('[data-idx]');
+          fields.forEach(el=>{
+            const field = el.dataset.field;
+            let val = el.value;
+            if(field==='price') val = parseFloat(val||0);
+            if(field==='stock') val = parseInt(val||0);
+            if(field==='active') val = (val==='true');
+            inv[idx][field] = val;
+          });
+          write(LS_KEYS.INV, inv); renderAll();
+        })
+      })
+    }
+
+    // Catalog
+    function populateFilters(){
+      const inv = read(LS_KEYS.INV, []);
+      const cats = Array.from(new Set(inv.map(i=>i.cat))).sort();
+      const sel = document.getElementById('filterCat');
+      const v = sel.value; // preserve selection
+      sel.innerHTML = '<option value="">All</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+      if([...sel.options].some(o=>o.value===v)) sel.value = v;
+    }
+    function renderCatalog(){
+      pruneOldTabs();
+      const inv = read(LS_KEYS.INV, []);
+      const root = document.getElementById('catalog');
+      const q = document.getElementById('search').value?.toLowerCase() || '';
+      const cat = document.getElementById('filterCat').value || '';
+      root.innerHTML = '';
+      inv.filter(i=>i.active && i.stock>0)
+         .filter(i=>!cat || i.cat===cat)
+         .filter(i=>!q || i.name.toLowerCase().includes(q))
+         .forEach((it, idx)=>{
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:start; gap:8px">
+            <div>
+              <div style="font-weight:700">${it.name}</div>
+              <div class="tag">${it.cat}</div>
+            </div>
+            <div class="badge">£${fmt(it.price)}</div>
+          </div>
+          <div class="row" style="margin-top:8px; align-items:center">
+            <div class="tag">In stock: ${it.stock}</div>
+            <div style="flex:1"></div>
+            <button class="btn small" data-add="${idx}">Add</button>
+          </div>`;
+        root.appendChild(card);
+      });
+      root.querySelectorAll('button[data-add]').forEach(b=>b.addEventListener('click', (e)=>{
+        const idx = Number(e.currentTarget.dataset.add);
+        const inv = read(LS_KEYS.INV, []);
+        const it = inv[idx];
+        const existing = cart.find(c=>c.name===it.name);
+        if(existing){ existing.qty++; }
+        else { cart.push({name:it.name, price:it.price, qty:1}); }
+        renderCart();
+      }))
+    }
+
+    // Cart
+    function renderCart(){
+      const root = document.getElementById('cart');
+      root.innerHTML = '';
+      let subtotal = 0;
+      cart.forEach((c,i)=>{subtotal += c.price*c.qty;});
+      document.getElementById('cartSummary').textContent = cart.length? `Items: ${cart.reduce((a,b)=>a+b.qty,0)} • Subtotal £${fmt(subtotal)}` : 'Cart empty';
+      cart.forEach((item, idx)=>{
+        const row = document.createElement('div');
+        row.className = 'grid';
+        row.style.gridTemplateColumns = '1fr 80px 80px 40px';
+        row.innerHTML = `
+          <div>${item.name}<div class="tag">£${fmt(item.price)}</div></div>
+          <input type="number" min="1" step="1" value="${item.qty}" data-idx="${idx}" />
+          <div style="display:flex; align-items:center">£${fmt(item.price*item.qty)}</div>
+          <button class="btn small warn" data-del="${idx}">✕</button>`;
+        root.appendChild(row);
+      });
+      root.querySelectorAll('input[type=number]').forEach(inp=>inp.addEventListener('change', (e)=>{
+        const idx = Number(e.currentTarget.dataset.idx);
+        const val = Math.max(1, parseInt(e.currentTarget.value||1));
+        cart[idx].qty = val; renderCart();
+      }));
+      root.querySelectorAll('button[data-del]').forEach(btn=>btn.addEventListener('click', (e)=>{
+        const idx = Number(e.currentTarget.dataset.del);
+        cart.splice(idx,1); renderCart();
+      }));
+    }
+
+    // Tabs
+    function renderTabs(){
+      const tabs = pruneOldTabs();
+      const root = document.getElementById('tabs');
+      root.innerHTML = '';
+      if(tabs.length===0){
+        const d = document.createElement('div'); d.className='card'; d.textContent='No open tabs. Create one above to start.'; root.appendChild(d);
+        return;
+      }
+      tabs.forEach(t=>{
+        const total = t.orders.reduce((a,o)=> a + o.items.reduce((s,i)=>s+i.qty*i.price,0), 0);
+        const last = new Date(t.lastActivity||t.created).toLocaleString();
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:start">
+            <div>
+              <div style="font-weight:700">${t.name}</div>
+              <div class="tag">Orders: ${t.orders.length}</div>
+            </div>
+            <div style="text-align:right">
+              <div class="badge">£${fmt(total)}</div>
+              <div class="tag">Last: ${last}</div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="scroll" style="max-height:160px">
+            ${t.orders.map(o=>`<div class="row" style="justify-content:space-between"><div>${o.orderNo}: ${o.items.map(i=>`${i.qty}× ${i.name}`).join(', ')}</div><div>£${fmt(o.items.reduce((s,i)=>s+i.qty*i.price,0))}</div></div>`).join('') || '<div class="tag">No orders yet.</div>'}
+          </div>
+          <div class="divider"></div>
+          <div class="row" style="justify-content:space-between">
+            <button class="btn small" data-view="${t.id}">Open</button>
+            <button class="btn small warn" data-close="${t.id}">Close Tab</button>
+          </div>`;
+        root.appendChild(div);
+      })
+
+      root.querySelectorAll('button[data-view]').forEach(b=>b.addEventListener('click',(e)=>{
+        openTab(e.currentTarget.dataset.view);
+      }));
+      root.querySelectorAll('button[data-close]').forEach(b=>b.addEventListener('click',(e)=>{
+        const id = e.currentTarget.dataset.close;
+        let tabs = read(LS_KEYS.TABS, []);
+        tabs = tabs.filter(t=>t.id!==id);
+        write(LS_KEYS.TABS, tabs);
+        renderAll();
+      }));
+    }
+
+    function openTab(id){
+      const tabs = read(LS_KEYS.TABS, []);
+      const t = tabs.find(x=>x.id===id);
+      if(!t) return;
+      touchTab(id);
+      alert(`Tab: ${t.name}\n\n${t.orders.map(o=>`${o.orderNo}: ` + o.items.map(i=>`${i.qty}× ${i.name}`).join(', ')).join('\n') || 'No orders yet.'}`);
+    }
+
+    // Checkout to Tabs
+    function checkout(){
+      if(cart.length===0){ alert('Cart is empty'); return; }
+      let tabs = pruneOldTabs();
+      const names = tabs.map(t=>t.name);
+      const choice = prompt('Assign to which tab?\n- Type EXISTING NAME to assign\n- Or enter NEW NAME to create a tab', names[0]||'');
+      if(!choice) return;
+      let t = tabs.find(x=>x.name.toLowerCase()===choice.toLowerCase());
+      if(!t){
+        t = {id:String(crypto.randomUUID ? crypto.randomUUID() : Math.random()), name:choice, created:now(), lastActivity:now(), orders:[]};
+        tabs.push(t);
+      }
+      const inv = read(LS_KEYS.INV, []);
+      // decrement stock
+      cart.forEach(ci=>{
+        const ii = inv.findIndex(j=>j.name===ci.name);
+        if(ii>-1){ inv[ii].stock = Math.max(0, (inv[ii].stock||0) - ci.qty); }
+      });
+      write(LS_KEYS.INV, inv);
+
+      const order = { orderNo: nextOrderNo(), ts: now(), items: cart.map(c=>({...c})) };
+      t.orders.push(order);
+      t.lastActivity = now();
+      write(LS_KEYS.TABS, tabs);
+
+      // Mark as completed sale (green list)
+      const completed = read(LS_KEYS.ORDERS, []);
+      const total = cart.reduce((s,i)=>s+i.qty*i.price,0);
+      completed.push({orderNo: order.orderNo, tabId: t.id, tabName: t.name, ts: order.ts, items: order.items, total});
+      write(LS_KEYS.ORDERS, completed);
+
+      cart = [];
+      renderAll();
+      alert(`Assigned ${order.orderNo} to tab "${t.name}"`);
+    }
+
+    // Events
+    document.getElementById('checkout').addEventListener('click', checkout);
+    document.getElementById('clearCart').addEventListener('click', ()=>{ cart=[]; renderCart(); });
+    document.getElementById('createTab').addEventListener('click', ()=>{
+      const name = document.getElementById('newTabName').value.trim();
+      if(!name) return;
+      const tabs = pruneOldTabs();
+      if(tabs.some(t=>t.name.toLowerCase()===name.toLowerCase())){ alert('Tab already exists'); return; }
+      tabs.push({id:String(crypto.randomUUID ? crypto.randomUUID() : Math.random()), name, created:now(), lastActivity:now(), orders:[]});
+      write(LS_KEYS.TABS, tabs);
+      document.getElementById('newTabName').value='';
+      renderTabs();
+    });
+
+    document.getElementById('search').addEventListener('input', renderCatalog);
+    document.getElementById('filterCat').addEventListener('change', renderCatalog);
+
+    // Toggle all completed
+    document.getElementById('toggleAllBtn').addEventListener('click', ()=>{
+      showingAll = !showingAll; renderCompleted();
+    });
+
+    // Inventory add
+    document.getElementById('addItem').addEventListener('click', ()=>{
+      const inv = read(LS_KEYS.INV, []);
+      const name = document.getElementById('itemName').value.trim();
+      const cat = document.getElementById('itemCat').value.trim() || 'General';
+      const price = parseFloat(document.getElementById('itemPrice').value||0);
+      const stock = parseInt(document.getElementById('itemStock').value||0);
+      const active = document.getElementById('itemActive').value==='true';
+      if(!name){ alert('Enter item name'); return; }
+      inv.push({name, cat, price, stock, active});
+      write(LS_KEYS.INV, inv);
+      document.getElementById('itemName').value='';
+      document.getElementById('itemPrice').value='';
+      document.getElementById('itemStock').value='';
+      renderAll();
+    });
+
+    // Seed / Export / Import
+    document.getElementById('seedDemo').addEventListener('click', seedDemo);
+    document.getElementById('exportData').addEventListener('click', ()=>{
+      const data = {
+        inventory: read(LS_KEYS.INV, []),
+        tabs: read(LS_KEYS.TABS, []),
+        completed: read(LS_KEYS.ORDERS, []),
+        counter: read(LS_KEYS.COUNTER, 0),
+        security: read(LS_KEYS.SECURITY, {admin:'admin123', staff:'staff123'})
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'bartab_export.json'; a.click();
+      URL.revokeObjectURL(url);
+    });
+    document.getElementById('importData').addEventListener('click', ()=>{
+      const inp = document.createElement('input'); inp.type='file'; inp.accept='.json,application/json';
+      inp.onchange = (e)=>{
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader(); reader.onload = ()=>{
+          try{
+            const data = JSON.parse(reader.result);
+            if(data.inventory) write(LS_KEYS.INV, data.inventory);
+            if(data.tabs) write(LS_KEYS.TABS, data.tabs);
+            if(data.completed) write(LS_KEYS.ORDERS, data.completed);
+            if(typeof data.counter==='number') write(LS_KEYS.COUNTER, data.counter);
+            if(data.security) write(LS_KEYS.SECURITY, data.security);
+            renderAll();
+          }catch(err){ alert('Invalid JSON'); }
+        };
+        reader.readAsText(file);
+      };
+      inp.click();
+    });
+
+    // Login / Logout
+    function backToLogin(){
+      session = {role:null};
+      document.getElementById('appPanel').classList.add('hidden');
+      document.getElementById('loginPanel').classList.remove('hidden');
+      document.getElementById('logoutBtn').classList.add('hidden');
+    }
+    document.getElementById('logoutBtn').addEventListener('click', backToLogin);
+    document.getElementById('logoutBtnBottom').addEventListener('click', backToLogin);
+
+    document.getElementById('adminLogin').addEventListener('click', ()=>{
+      const sec = read(LS_KEYS.SECURITY, {admin:'admin123'});
+      const pass = document.getElementById('adminPass').value || '';
+      if(pass === sec.admin){
+        session = {role:'admin'}; enterApp();
+      } else alert('Wrong password');
+    });
+    document.getElementById('staffLogin').addEventListener('click', ()=>{
+      const sec = read(LS_KEYS.SECURITY, {staff:'staff123'});
+      const pass = document.getElementById('staffPass').value || '';
+      if(pass === sec.staff){
+        session = {role:'staff'}; enterApp();
+      } else alert('Wrong password');
+    });
+
+    function enterApp(){
+      document.getElementById('loginPanel').classList.add('hidden');
+      document.getElementById('appPanel').classList.remove('hidden');
+      document.getElementById('logoutBtn').classList.remove('hidden');
+      renderAll();
+    }
+
+    // Security defaults + initial seed
+    saveSecurityDefaults();
+
+    // Force a one-time upgrade to the new expanded stock
+    const currentVersion = read(LS_KEYS.SEEDVER, '0');
+    if(currentVersion !== STOCK_VERSION){
+      seedDemo();
+      write(LS_KEYS.SEEDVER, STOCK_VERSION);
+    } else if(read(LS_KEYS.INV, []).length===0){
+      seedDemo();
+    }
+  </script>
+</body>
+</html>
